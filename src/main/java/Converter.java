@@ -77,11 +77,14 @@ public class Converter {
         } else {
             throw new WrongExpressionFormatException("Wrong format! Your expression: " + stringValue);
         }
+        /* Числовое значение */
         double doubleValue;
+        /* Если это не целое число, надо отделить целую часть от дробной */
         if(stringValue.contains(Settings.split)) {
             String[] dollarsParts = stringValue.split(Settings.split);
             int wholePart = Integer.valueOf(dollarsParts[0]);
             int intRestPart  = Integer.valueOf(dollarsParts[1]);
+            /* Переносим дробную часть в свои разряды, т.е 23 -> 0,23 */
             double doubleRestPart = intRestPart / ( Math.pow( 10, dollarsParts[1].length() ) );
             doubleValue = wholePart + doubleRestPart;
         } else {
