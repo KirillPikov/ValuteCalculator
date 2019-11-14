@@ -68,7 +68,7 @@ public class Converter {
      * @throws WrongExpressionFormatException возникает, если //TODO дописать!
      */
     public static double getDoubleValue(String stringValue) throws WrongValueException, WrongExpressionFormatException {
-        /*  */
+        /* Прежде чем получать числовое значение, необходимо убрать лишние сиволы валют */
         if(stringValue.startsWith("$")) {
             stringValue = stringValue.substring(1);
         } else
@@ -79,15 +79,17 @@ public class Converter {
         }
         /* Числовое значение */
         double doubleValue;
-        /* Если это не целое число, надо отделить целую часть от дробной */
+        /* Если это не целое число, то надо отделить целую часть от дробной */
         if(stringValue.contains(Settings.split)) {
             String[] dollarsParts = stringValue.split(Settings.split);
             int wholePart = Integer.valueOf(dollarsParts[0]);
             int intRestPart  = Integer.valueOf(dollarsParts[1]);
             /* Переносим дробную часть в свои разряды, т.е 23 -> 0,23 */
             double doubleRestPart = intRestPart / ( Math.pow( 10, dollarsParts[1].length() ) );
+            /* Складываем целую часть и дробную */
             doubleValue = wholePart + doubleRestPart;
         } else {
+            /* Иначе, переводим строковое значение в численное */
             doubleValue = Integer.valueOf(stringValue);
         }
         if(doubleValue < 0) {
