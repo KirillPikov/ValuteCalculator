@@ -62,17 +62,25 @@ public class Calculator {
 
     public static String calculateExpression(String expression)
             throws WrongValueException, WrongExpressionFormatException {
-        if((expression.startsWith("toDollars") || expression.startsWith("toRubles")) && !expression.endsWith(")")) {
-            expression += ")";
-        }
         /* Получаем первый и второй термы */
         String firstTerm = getTerm(expression);
-        String beginSecondTerm = expression.substring(firstTerm.length() + 3);
-        int endSecondTerm = getIndexEndTerm(beginSecondTerm);
-        String secondTerm = getTerm(beginSecondTerm);
+        String beginSecondTerm;
+        String secondTerm;
+        int endSecondTerm;
+        if(!(firstTerm.length() + 3 < expression.length())) {
+            secondTerm = "";
+        } else {
+            beginSecondTerm = expression.substring(firstTerm.length() + 3);
+            secondTerm = getTerm(beginSecondTerm);
+        }
+        endSecondTerm  = secondTerm.length();
 
+        String outerExpression = "";
         /* Получаем выражение, находящееся за этими двумя термами */
-        String outerExpression = expression.substring(endSecondTerm + firstTerm.length() + 3);
+        if(firstTerm.length() + secondTerm.length() + 3 < expression.length()) {
+            outerExpression = expression.substring(endSecondTerm + firstTerm.length() + 3);
+        }
+
         /* Высчитываем значения термов, если они являются "функциями",
             в противном случае они представляют собой значения валют */
         firstTerm  = firstTerm.startsWith("toDollars")   ? calculateExpressionToDollars(firstTerm)   : firstTerm;
@@ -89,7 +97,11 @@ public class Calculator {
                 resultOperationWithTerms = sub(firstTerm, secondTerm);
             }
         }
-        return resultOperationWithTerms + outerExpression;
+        String result = resultOperationWithTerms + outerExpression;
+        if(result.contains(" ")) {
+            result = calculateExpression(result);
+        }
+        return result;
     }
 
     public static String getTerm(String expression) {
@@ -109,7 +121,7 @@ public class Calculator {
     private static String calculateExpressionToDollars(String expression)
             throws WrongValueException, WrongExpressionFormatException {
         return Converter.toDollars(
-                calculateExpression(expression.substring(10))
+                calculateExpression(expression.substring(10, getIndexEndTerm(expression) - 1 ))
         );
     }
 
@@ -125,7 +137,7 @@ public class Calculator {
     private static String calculateExpressionToRubles(String expression)
             throws WrongValueException, WrongExpressionFormatException {
         return Converter.toRubles(
-                calculateExpression(expression.substring(9))
+                calculateExpression(expression.substring(9, getIndexEndTerm(expression) - 1 ))
         );
     }
 
@@ -161,7 +173,7 @@ public class Calculator {
                 }
             }
         } else {
-            indexEndTerm = expression.indexOf(" ");
+            indexEndTerm = (expression.contains(" ")) ? expression.indexOf(" ") : expression.length();
         }
         /* Цикл выполняется до тех пор, пока кол-во открытых скобок не будет равно 0
          или пока не дойдём до конца выражения */
