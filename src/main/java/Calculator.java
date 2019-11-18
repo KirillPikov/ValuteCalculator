@@ -101,10 +101,30 @@ public class Calculator {
         if(result.contains(" ")) {
             result = calculateExpression(result);
         }
+        return termToNormalForm(result);
+    }
+
+    private static String termToNormalForm(String expression) {
+        String result = expression;
+        if(result.contains(Settings.split)) {
+            boolean isRubles = false;
+            if(result.endsWith("p")) {
+                isRubles = true;
+            }
+            if(result.length() - result.indexOf(Settings.split) > 5) {
+                result = result.substring(
+                        0,
+                        result.indexOf(Settings.split) + 5
+                );
+                if (isRubles) {
+                    result += "p";
+                }
+            }
+        }
         return result;
     }
 
-    public static String getTerm(String expression) {
+    private static String getTerm(String expression) {
         int indexEndTerm = getIndexEndTerm(expression);
         return expression.substring(0, indexEndTerm);
     }
@@ -141,17 +161,13 @@ public class Calculator {
         );
     }
 
-    public static int getIndexEndInnerExpression(String expression) {
-        return getIndexEndTerm(expression) - 1;
-    }
-
     /**
      * Метод для получения индекса символа, завершающего выражение.
      * @param expression выражение из которого необходимо вычленить первое подвыражение
      * и найти индекс завершающий его.
      * @return индекс символа завершающего выражение.
      */
-    public static int getIndexEndTerm(String expression) {
+    private static int getIndexEndTerm(String expression) {
         int indexEndTerm = 0;
         if(expression.startsWith("toDollars") ||
            expression.startsWith("toRubles")) {
@@ -175,8 +191,6 @@ public class Calculator {
         } else {
             indexEndTerm = (expression.contains(" ")) ? expression.indexOf(" ") : expression.length();
         }
-        /* Цикл выполняется до тех пор, пока кол-во открытых скобок не будет равно 0
-         или пока не дойдём до конца выражения */
         return indexEndTerm;
     }
 }
