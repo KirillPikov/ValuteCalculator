@@ -12,3 +12,7 @@ build/
 *.ipr
 out/
 .idea/vcs.xml
+gradlew.bat
+gradlew
+gradle/wrapper/gradle-wrapper.properties
+gradle/wrapper/gradle-wrapper.jar

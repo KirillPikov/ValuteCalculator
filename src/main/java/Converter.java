@@ -15,7 +15,7 @@ public class Converter {
      * @param dollars строковое значение в долларах.
      * @return строковое значение в рублях.
      * @throws WrongValueException возникает, если получилось отрицательное значение.
-     * @throws WrongExpressionFormatException возникает, если //TODO дописать!
+     * @throws WrongExpressionFormatException возникает, если значение не является валютой.
      */
     public static String toRubles(String dollars) throws WrongValueException, WrongExpressionFormatException {
         String result = new String();
@@ -23,7 +23,7 @@ public class Converter {
             /* Получаем числовое значение в долларах */
             double dollarsValue = getDoubleValue(dollars);
             /* Переводим в рубли в соответствии с курсом */
-            double rublesValue = dollarsValue * Settings.cours;
+            double rublesValue = dollarsValue * Settings.COURS;
             result = rublesValue + "p";
         } else
         if(dollars.endsWith("p")) {
@@ -32,23 +32,25 @@ public class Converter {
         } else {
             throw new WrongExpressionFormatException("Wrong format! Your expression: " + dollars);
         }
-        return result.replace('.', Settings.split.charAt(0) );
+        return result.replace('.', Settings.SPLIT.charAt(0) );
     }
 
     /**
      * Конвертирует рубли в доллары.
+     * Если было передано значение в долларах - оно и вернётся.
      * @param rubles строковое значение в рублях.
      * @return строковое значение в долларах.
      * @throws WrongValueException возникает, если получилось отрицательное значение.
-     * @throws WrongExpressionFormatException возникает, если //TODO дописать!
+     * @throws WrongExpressionFormatException возникает, если значение не является валютой.
      */
-    public static String toDollars(String rubles) throws WrongValueException, WrongExpressionFormatException {
+    public static String toDollars(String rubles)
+            throws WrongValueException, WrongExpressionFormatException {
         String result = new String();
         if(rubles.endsWith("p")) {
             /* Получаем числовое значение в рублях */
             double rublesValue = getDoubleValue(rubles);
             /* Переводим в доллары в соответствии с курсом */
-            double dollarsValue = rublesValue / Settings.cours;
+            double dollarsValue = rublesValue / Settings.COURS;
             result = "$" + dollarsValue;
         } else
         if(rubles.startsWith("$")) {
@@ -57,7 +59,7 @@ public class Converter {
         } else {
             throw new WrongExpressionFormatException("Wrong format! Your expression: " + rubles);
         }
-        return result.replace('.', Settings.split.charAt(0) );
+        return result.replace('.', Settings.SPLIT.charAt(0) );
     }
 
     /**
@@ -65,25 +67,29 @@ public class Converter {
      * @param stringValue строковое значение.
      * @return числовое значение.
      * @throws WrongValueException возникает, если получилось отрицательное значение.
-     * @throws WrongExpressionFormatException возникает, если //TODO дописать!
+     * @throws WrongExpressionFormatException возникает, если значение не является валютой.
      */
-    public static double getDoubleValue(String stringValue) throws WrongValueException, WrongExpressionFormatException {
+    public static double getDoubleValue(String stringValue)
+            throws WrongValueException, WrongExpressionFormatException {
         /* Прежде чем получать числовое значение, необходимо убрать лишние сиволы валют */
-        if(stringValue.startsWith("$")) {
-            stringValue = stringValue.substring(1);
-        } else
-        if(stringValue.endsWith("p")) {
-            stringValue = stringValue.substring(0, stringValue.length() - 1);
-        } else {
-            throw new WrongExpressionFormatException("Wrong format! Your expression: " + stringValue);
-        }
+        stringValue = getStringValueWithoutValute(stringValue);
         /* Числовое значение */
         double doubleValue;
         /* Если это не целое число, то надо отделить целую часть от дробной */
-        if(stringValue.contains(Settings.split)) {
-            String[] dollarsParts = stringValue.split(Settings.split);
-            int wholePart = Integer.valueOf(dollarsParts[0]);
-            int intRestPart  = Integer.valueOf(dollarsParts[1]);
+        if(stringValue.contains(Settings.SPLIT)) {
+            String[] dollarsParts = stringValue.split(Settings.SPLIT);
+            int wholePart;
+            int intRestPart;
+            try {
+                wholePart = Integer.valueOf(dollarsParts[0]);
+                /* Отсекаем ненужные разряды после запятой */
+                dollarsParts[1] = dollarsParts[1].length() > Settings.DIGITS_COUNT_AFTER_COMMA ?
+                        dollarsParts[1].substring(0, Settings.DIGITS_COUNT_AFTER_COMMA)
+                        : dollarsParts[1];
+                intRestPart = Integer.valueOf(dollarsParts[1]);
+            } catch (Exception e) {
+                throw new WrongExpressionFormatException("Wrong format of expression!");
+            }
             /* Переносим дробную часть в свои разряды, т.е 23 -> 0,23 */
             double doubleRestPart = intRestPart / ( Math.pow( 10, dollarsParts[1].length() ) );
             /* Складываем целую часть и дробную */
@@ -96,5 +102,24 @@ public class Converter {
             throw new WrongValueException("Value must be > 0, value = " + stringValue);
         }
         return doubleValue;
+    }
+
+    /**
+     * Метод, предназначенный для отсечения знака валюты.
+     * @param stringValue значение, в котором необходимо осечь знак валюты.
+     * @return строковое значение без знака валюты.
+     * @throws WrongExpressionFormatException возникает в случае, если переданное значение не содержит знак валюты.
+     */
+    private static String getStringValueWithoutValute(String stringValue)
+            throws WrongExpressionFormatException {
+        if(stringValue.startsWith("$")) {
+            stringValue = stringValue.substring(1);
+        } else
+        if(stringValue.endsWith("p")) {
+            stringValue = stringValue.substring(0, stringValue.length() - 1);
+        } else {
+            throw new WrongExpressionFormatException("Wrong format! Your expression: " + stringValue);
+        }
+        return stringValue;
     }
 }

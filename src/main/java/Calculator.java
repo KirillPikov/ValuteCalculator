@@ -14,8 +14,9 @@ public class Calculator {
      * @param first первое слагаемое.
      * @param second второе слагаемое.
      * @return сумму двух значений в рублях.
-     * @throws WrongValueException //TODO
-     * @throws WrongExpressionFormatException //TODO
+     * @throws WrongValueException смотри {@link Converter#toRubles(String)},
+     * {@link Converter#toDollars(String)}, {@link Converter#getDoubleValue(String)}
+     * @throws WrongExpressionFormatException смотри {@link Converter#getDoubleValue(String)}
      */
     public static String sum(String first, String second)
             throws WrongValueException, WrongExpressionFormatException {
@@ -29,7 +30,7 @@ public class Calculator {
         secondValue = Converter.getDoubleValue(second);
         /* Возвращаем строковое представление суммы слагаемых, добавляя в конец выражение знак рубля */
         return String.valueOf(firstValue + secondValue)
-                     .replace('.', Settings.split.charAt(0)) + "p";
+                     .replace('.', Settings.SPLIT.charAt(0)) + "p";
     }
 
     /**
@@ -37,8 +38,9 @@ public class Calculator {
      * @param first уменьшаемое.
      * @param second вычитаемое.
      * @return разность двух значений в рублях.
-     * @throws WrongValueException  //TODO
-     * @throws WrongExpressionFormatException //TODO
+     * @throws WrongValueException смотри {@link Converter#toRubles(String)},
+     * {@link Converter#toDollars(String)}, {@link Converter#getDoubleValue(String)}
+     * @throws WrongExpressionFormatException смотри {@link Converter#getDoubleValue(String)}
      */
     public static String sub(String first, String second)
             throws WrongValueException, WrongExpressionFormatException {
@@ -57,124 +59,124 @@ public class Calculator {
         }
         /* Возвращаем строковое представление разности значений, добавляя в конец выражение знак рубля */
         return String.valueOf(result)
-                .replace('.', Settings.split.charAt(0)) + "p";
+                .replace('.', Settings.SPLIT.charAt(0)) + "p";
     }
 
     /**
-     * <p>
-     * Метод для вычисления значения выражения содержащего следующие операции:
-     * <li>toDollars - {@link Converter#toDollars(String)}</li>
-     * <li>toRubles - {@link Converter#toRubles(String)}</li>
-     * <li>"<b> + </b>" - {@link Calculator#sum(String, String)}</li>
-     * <li>"<b> - </b>" - {@link Calculator#sub(String, String)}</li>
-     * </p>
-     * @param expression подсчитываемое выражение.
-     * @return значение переданного выражения.
-     * @throws WrongValueException //TODO
-     * @throws WrongExpressionFormatException //TODO
+     * Подсчитывает значение выражения.
+     * @param expression выражение, которое необходимо подсчитать.
+     * @return значение выражения.
+     * @throws WrongValueException смотри {@link Converter#toRubles(String)},
+     * {@link Converter#toDollars(String)}, {@link Converter#getDoubleValue(String)}
+     * @throws WrongExpressionFormatException смотри {@link Converter#getDoubleValue(String)}
      */
     public static String calculateExpression(String expression)
             throws WrongValueException, WrongExpressionFormatException {
-        String result = expression;
-        if(expression.startsWith("toDollars(")) {
-            int indexEndInnerExp = getIndexEndInnerExp(expression);
-            result = calculateExpressionToDollars(expression, indexEndInnerExp);
-            result = calcucalteOuterExpression(result, indexEndInnerExp, expression);
-        } else
-        if(expression.startsWith("toRubles(")) {
-            int indexEndInnerExp = getIndexEndInnerExp(expression);
-            result = calculateExpressionToRubles(expression, indexEndInnerExp);
-            result = calcucalteOuterExpression(result, indexEndInnerExp, expression);
+        /* Получаем первый и второй термы */
+        String firstTerm = getTerm(expression);
+        /* Строка начала второга терма */
+        String beginSecondTerm;
+        String secondTerm;
+        int endSecondTerm;
+        /* Проверка на наличие второго терма */
+        if(!(firstTerm.length() + 3 < expression.length())) {
+            secondTerm = "";
         } else {
-            result = calculateExpressionWithBasicOperations(expression);
+            beginSecondTerm = expression.substring(firstTerm.length() + 3);
+            secondTerm = getTerm(beginSecondTerm);
         }
-        return result;
-    }
+        endSecondTerm  = secondTerm.length();
 
-    /**
-     *  <p>
-     *  Метод для вычисления значения выражения содержащего следующие операции:
-     *  <li>"<b> + </b>" - {@link Calculator#sum(String, String)}</li>
-     *  <li>"<b> - </b>" - {@link Calculator#sub(String, String)}</li>
-     *  </p>
-     * @param expression подсчитываемое выражение.
-     * @return значение переданного выражения.
-     * @throws WrongValueException
-     * @throws WrongExpressionFormatException
-     */
-    private static String calculateExpressionWithBasicOperations(String expression)
-            throws WrongValueException, WrongExpressionFormatException {
-        String result = expression;
-        int indexFirstSpace = expression.indexOf(' ');
-        if(expression.charAt(indexFirstSpace + 1) == '+') {
-            result = Calculator.sum(
-                    expression.substring(0, indexFirstSpace),
-                    calculateExpression(expression.substring(indexFirstSpace + 3))
-            );
+        /* Выражение, находящееся за этими двумя термами */
+        String outerExpression = "";
+        /* Если оно существует, получаем его */
+        if(firstTerm.length() + secondTerm.length() + 3 < expression.length()) {
+            outerExpression = expression.substring(endSecondTerm + firstTerm.length() + 3);
         }
-        else if(expression.charAt(indexFirstSpace + 1) == '-') {
-            result = calculateExpression(
-                    calculateExpressionWithSubstraction(expression)
-            );
-        }
-        return result;
-    }
 
-    /**
-     * <p>
-     * Метод для определения и вычисления выражений, находящихся после операций:
-     * <li>toDollars - {@link Converter#toDollars(String)}</li>
-     * <li>toRubles - {@link Converter#toRubles(String)}</li>
-     * </p>
-     * Пример такого выражения выделен жирным: <code>toDollars(35p - 0,1$)<b> + $25 - 300p</b></code>
-     * @param result результат выражения, благодаря которуму вызвался этот метод
-     * ( в примере это <code>toDollars(35p - 0,1$)</code> ).
-     * @param indexEndInnerExp индекс последней закрывающей скобки " ) " параметра result.
-     * @param expression само внешнее выражение, которо необходимо посчитать и прибавить к параметру result.
-     * @return result как сумму или разность выражений result и expression, в случае если после result
-     * есть внешнее выражение. Иначе возвращает result без изменений.
-     * @throws WrongValueException //TODO
-     * @throws WrongExpressionFormatException //TODO
-     */
-    private static String calcucalteOuterExpression(String result,
-                                                    int indexEndInnerExp,
-                                                    String expression)
-            throws WrongValueException, WrongExpressionFormatException {
-        /* Если за символом " ) " есть ещё выражение */
-        if(indexEndInnerExp < expression.length() - 1) {
-            /* И если это выражение имеет первой операцией сложение */
-            if (expression.charAt(indexEndInnerExp + 2) == '+') {
-                result = Calculator.sum(
-                        result,
-                        calculateExpression(expression.substring(indexEndInnerExp + 4))
-                );
-            } /* Или если это выражение имеет первой операцией сложение */
-            else if (expression.charAt(indexEndInnerExp + 2) == '-') {
-                result = calculateExpression(
-                        calculateExpressionWithSubstraction(
-                                result + expression.substring(indexEndInnerExp + 1)
-                        )
-                );
+        /* Высчитываем значения термов, если они являются "функциями",
+            в противном случае они представляют собой значения валют */
+        firstTerm  = firstTerm.startsWith("toDollars")   ? calculateExpressionToDollars(firstTerm)   : firstTerm;
+        firstTerm  = firstTerm.startsWith("toRubles")    ? calculateExpressionToRubles(firstTerm)    : firstTerm;
+        secondTerm = secondTerm.startsWith("toDollars")  ? calculateExpressionToDollars(secondTerm)  : secondTerm;
+        secondTerm = secondTerm.startsWith("toRubles")   ? calculateExpressionToRubles(secondTerm)   : secondTerm;
+
+        /* На случай, если второй терм пустой, то результат всего выражения есть значение первого терма */
+        String resultOperationWithTerms = firstTerm;
+        /* Если второй терм есть */
+        if(secondTerm.length() > 0) {
+            /* Опрделяем знак операции между этими термами */
+            if (expression.charAt(firstTerm.length() + 1) == '+') {
+                resultOperationWithTerms = sum(firstTerm, secondTerm);
+            }
+            if (expression.charAt(firstTerm.length() + 1) == '-') {
+                resultOperationWithTerms = sub(firstTerm, secondTerm);
             }
         }
-        return result;
+        /* Промежуточным результатом этого метода является результат операции между двумя термами */
+        String result = resultOperationWithTerms + outerExpression;
+        /* Но если после них есть выражение, его тоже необходимо посчитать, т.е выполняем операции слева направо */
+        if(result.contains(" ")) {
+            result = calculateExpression(result);
+        }
+        /* Приводим его в нормальную форму */
+        return termToNormalForm(result);
+    }
+
+    /**
+     * Приводит терм в нормальную форму, т.е если это целое число - вернётся оно же, но если
+     * это дробное, то вернётся это же число, но с {@link Settings#DIGITS_COUNT_AFTER_COMMA} знаком(ами)
+     * после запятой.
+     * @param term исходный терм.
+     * @return нормализованый терм.
+     */
+    private static String termToNormalForm(String term) {
+        /* В случае целого числа */
+        String normalTerm = term;
+        /* Если оно дробное */
+        if(normalTerm.contains(Settings.SPLIT)) {
+            boolean isRubles = false;
+            /* Определяем валюту, т.к. если это рубли, то мы можем затереть символ "p" */
+            if(normalTerm.endsWith("p")) {
+                isRubles = true;
+            }
+            /* В случае, если знаков в терме после запятой больше, чем задано в Settings.DIGITS_COUNT_AFTER_COMMA */
+            if(normalTerm.length() - normalTerm.indexOf(Settings.SPLIT) > Settings.DIGITS_COUNT_AFTER_COMMA) {
+                /* Получаем подстроку с количеством символов после запятой Settings.DIGITS_COUNT_AFTER_COMMA */
+                normalTerm = normalTerm.substring(
+                        0,
+                        normalTerm.indexOf(Settings.SPLIT) + Settings.DIGITS_COUNT_AFTER_COMMA
+                );
+                /* Если это рубли, то необходимо добавить знак "p" */
+                normalTerm = (isRubles) ? normalTerm + "p" : normalTerm;
+            }
+        }
+        return normalTerm;
+    }
+
+    /**
+     * Метод для получения первого терма из выражения.
+     * @param expression выражение, из которого извлекаем терм.
+     * @return первый терм выражения.
+     */
+    private static String getTerm(String expression) {
+        int indexEndTerm = getIndexEndTerm(expression);
+        return expression.substring(0, indexEndTerm);
     }
 
     /**
      * Метод, вычисляющий значение операции toDollars {@link Converter#toDollars(String)}
      * и выражения лежащего внутри него.
      * @param expression вычисляемое выражение.
-     * @param indexEndInnerExp индекс последней закрывающей скобки " ) " параметра expression.
      * @return значение операции toDollars {@link Converter#toDollars(String)} применённой к
      * лежащему внутри выражению.
-     * @throws WrongValueException //TODO
-     * @throws WrongExpressionFormatException //TODO
+     * @throws WrongValueException смотри {@link Converter#toDollars(String)}
+     * @throws WrongExpressionFormatException смотри {@link Converter#getDoubleValue(String)}
      */
-    private static String calculateExpressionToDollars(String expression,
-                                                      int indexEndInnerExp)
+    private static String calculateExpressionToDollars(String expression)
             throws WrongValueException, WrongExpressionFormatException {
         return Converter.toDollars(
-                calculateExpression(expression.substring(10, indexEndInnerExp))
+                calculateExpression(expression.substring(10, getIndexEndTerm(expression) - 1 ))
         );
     }
 
@@ -182,67 +184,16 @@ public class Calculator {
      * Метод, вычисляющий значение операции toRubles {@link Converter#toRubles(String)}
      * и выражения лежащего внутри него.
      * @param expression вычисляемое выражение.
-     * @param indexEndInnerExp индекс последней закрывающей скобки " ) " параметра expression.
      * @return значение операции toRubles {@link Converter#toRubles(String)} применённой к
      * лежащему внутри выражению.
-     * @throws WrongValueException //TODO
-     * @throws WrongExpressionFormatException //TODO
+     * @throws WrongValueException смотри {@link Converter#toRubles(String)}
+     * @throws WrongExpressionFormatException смотри {@link Converter#getDoubleValue(String)}
      */
-    private static String calculateExpressionToRubles(String expression,
-                                                     int indexEndInnerExp)
+    private static String calculateExpressionToRubles(String expression)
             throws WrongValueException, WrongExpressionFormatException {
         return Converter.toRubles(
-                calculateExpression(expression.substring(9, indexEndInnerExp))
+                calculateExpression(expression.substring(9, getIndexEndTerm(expression) - 1 ))
         );
-    }
-    //TODO упростить!
-    private static String calculateExpressionWithSubstraction(String expression)
-            throws WrongValueException, WrongExpressionFormatException {
-        String result;
-        String subExpression = expression.substring(expression.indexOf(' ') + 3);
-        String secondValue;
-        int secondValueLength = 0;
-        int indexEndInnerExpression = -1;
-        if(subExpression.startsWith("toDollars")) {
-            indexEndInnerExpression = getIndexEndInnerExp(subExpression);
-            secondValueLength = indexEndInnerExpression + 1;
-            secondValue = calculateExpressionToDollars(subExpression, indexEndInnerExpression);
-        } else
-        if(subExpression.startsWith("toRubles")) {
-            indexEndInnerExpression = getIndexEndInnerExp(subExpression);
-            secondValueLength = indexEndInnerExpression + 1;
-            secondValue = calculateExpressionToRubles(subExpression, indexEndInnerExpression);
-        } else
-        {
-            char[] subExpressionChars = subExpression.toCharArray();
-            for(int i = 1; i < subExpressionChars.length; i++) {
-                if(subExpressionChars[i] == ' ' || subExpressionChars[i] == ')') {
-                    indexEndInnerExpression = i;
-                    break;
-                }
-            }
-            if(indexEndInnerExpression == -1) {
-                indexEndInnerExpression = subExpression.length();
-            }
-            secondValue = subExpression.substring(0, indexEndInnerExpression);
-            secondValueLength = secondValue.length();
-        }
-        String substraction = Calculator.sub(
-                expression.substring(0, expression.indexOf(' ')),
-                secondValue
-        );
-        if(subExpression.length() > secondValueLength) {
-            String restExpression;
-            if(subExpression.charAt(indexEndInnerExpression) == ')') {
-                restExpression = subExpression.substring(indexEndInnerExpression + 1);
-            } else {
-                restExpression = subExpression.substring(indexEndInnerExpression);
-            }
-            result = substraction + restExpression;
-        } else {
-            result = substraction;
-        }
-        return result;
     }
 
     /**
@@ -251,26 +202,32 @@ public class Calculator {
      * и найти индекс завершающий его.
      * @return индекс символа завершающего выражение.
      */
-    public static int getIndexEndInnerExp(String expression) {
-        char[] charArray = expression.substring(10).toCharArray();
-        /* Число открытых скобок */
-        int brakesCount = 1;
-        /* Индекс для отсчёта */
-        int indexEndInnerExp = 10;
-        for (char ch: charArray) {
-            if(ch == '(') /* Если встретили открытую скобку - увеличиваем счётчик открытых скобок */ {
-                brakesCount++;
+    private static int getIndexEndTerm(String expression) {
+        int indexEndTerm = 0;
+        /* В случае, если необходимо найти индекс символа завершающего функцию */
+        if(expression.startsWith("toDollars") ||
+           expression.startsWith("toRubles")) {
+            char[] charArray = expression.substring(10).toCharArray();
+            /* Число открытых скобок */
+            int brakesCount = 1;
+            /* Индекс для отсчёта */
+            indexEndTerm = 10;
+            for (char ch : charArray) {
+                if (ch == '(') /* Если встретили открытую скобку - увеличиваем счётчик открытых скобок */ {
+                    brakesCount++;
+                }
+                if (ch == ')') /* Если встретили закрытую скобку - уменьшаем счётчик открытых скобок */ {
+                    brakesCount--;
+                }
+                indexEndTerm++;
+                if (brakesCount == 0) {
+                    break;
+                }
             }
-            if(ch == ')') {
-                brakesCount--;
-            }
-            if(brakesCount == 0) {
-                break;
-            }
-            indexEndInnerExp++;
+        } else /* Иначе, это может быть как сумма или разность термов, тогда индекс - первый пробел,
+         в противном случае это просто один простой терм (пример "569,364р")*/ {
+            indexEndTerm = (expression.contains(" ")) ? expression.indexOf(" ") : expression.length();
         }
-        /* Цикл выполняется до тех пор, пока кол-во открытых скобок не будет равно 0
-         или пока не дойдём до конца выражения */
-        return indexEndInnerExp;
+        return indexEndTerm;
     }
 }
