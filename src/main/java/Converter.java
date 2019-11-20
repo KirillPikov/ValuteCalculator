@@ -1,3 +1,8 @@
+import java.util.Set;
+import java.util.regex.MatchResult;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * Класс, предназначенный для конвертирования валют и получения
  * их численного значения по строковому.
@@ -106,19 +111,21 @@ public class Converter {
 
     /**
      * Метод, предназначенный для отсечения знака валюты.
-     * @param stringValue значение, в котором необходимо осечь знак валюты.
+     * @param stringValue значение, в котором необходимо отсечь знак валюты.
      * @return строковое значение без знака валюты.
      * @throws WrongExpressionFormatException возникает в случае, если переданное значение не содержит знак валюты.
      */
-    private static String getStringValueWithoutValute(String stringValue)
-            throws WrongExpressionFormatException {
-        if(stringValue.startsWith("$")) {
-            stringValue = stringValue.substring(1);
-        } else
-        if(stringValue.endsWith("p")) {
-            stringValue = stringValue.substring(0, stringValue.length() - 1);
-        } else {
-            throw new WrongExpressionFormatException("Wrong format! Your expression: " + stringValue);
+    private static String getStringValueWithoutValute(String stringValue) throws WrongExpressionFormatException {
+        String regex = "\\d*" + Settings.SPLIT + "{0,1}\\d{0," + Settings.DIGITS_COUNT_AFTER_COMMA + "}";
+        String string = stringValue;
+        Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+        Matcher matcher = pattern.matcher(string);
+        while (matcher.find()) {
+            String group = matcher.group();
+            if(group.length() != 0) {
+                stringValue = matcher.group();
+                break;
+            }
         }
         return stringValue;
     }
