@@ -7,6 +7,7 @@ https://regex101.com/
 
 (to\S*\(((?R)|[$\d+][\d+p\s]*.\d+[\dp]|[\s+-])*\){1-2}|[$\d]\d*.\d*[p\d])   -   выводит все значения в выражении
 
+(to\S*\((\g<0>|[\s+-])*\)|[$\d]\d*.\d*[p\d]|) - большие термы и валюты
 
 $61 + toRubles(43p + toDollars(16p)) + toRublles(toDollars(toRubles(toDollars($150 - toDollars(1800,1534p + toDollars(55p + $15)) - 895p + 15p)))) + 15p
 
@@ -25,7 +26,3 @@ toDollars(55p + $15)
 55p + $15
 
 $15
-
-(to\S*\(((?R)|[$\d+][\d+p\s].\d+[\dp]|[\s+-])*\)|[$\d]\d*.\d*[p\d]|)
-
-toRubles(toDollars($150 - toDollars(55p + $15 - 588,56p) + 26p - $65) + toDollars(1800,1534p + toDollars(55p + $15)) - 895p + 15p
